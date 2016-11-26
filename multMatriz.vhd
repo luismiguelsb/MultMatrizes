@@ -49,11 +49,11 @@ architecture Behavioral of multMatriz is
 
 --sinais
 signal AddrA,AddrB,AddrR,Linha,Coluna,regI,outMux1,outMux2: std_logic_vector(3 downto 0);
-signal incA,incB,loadAddrA,loadAddrB,loadAddrR,loadAcc,loadLinha,incLinha,loadColuna,compLinha,compColuna,CompI: std_logic;
-signal incColuna,loadI, incI, selMux1, selMuxAcc:std_logic;
+signal loadAddrA,loadAddrB,loadAddrR,loadAcc,loadLinha,incLinha,loadColuna,compLinha,compColuna,CompI: std_logic;
+signal incColuna,loadI, incI, selMux1, selMuxAcc, incR:std_logic;
 signal outAcc, outMuxAcc,outMux3,outMult,outULA: std_logic_vector(7 downto 0);
 signal selMux2,selMux3: std_logic_vector(1 downto 0);
-type tpestado is (idle,s0,s1,s2,s3,s4,s5);
+type tpestado is (idle,s0,s1,s2,s3,s4,s5,s6,s7);
 signal estado: tpestado;
 
 begin
@@ -71,10 +71,11 @@ begin
 								loadLinha <= '1';
 								loadColuna <= '1';
 								loadI <= '1';
+								loadAddrR<='1';
 								if start = '0' then
 									estado <= idle;
 									else if compLinha = '1' then 
-										estado <= idle;
+										estado <= s7;
 										else if compColuna = '1' then
 											estado <= s5;
 											else
@@ -122,22 +123,26 @@ begin
 								loadI <= '1';
 								writeMem <= "1";
 								incColuna <= '1';
+					         estado<=s5;
+				when s5 =>
+								incR<='1';
 								if compColuna = '0' then estado <= s0;
 									else
-										estado <= s5;
+										estado <= s6;
 								end if;
-								
-				when s5 => 
+				when s6 => 
 								loadColuna <= '1';
 								incLinha <= '1';
-								if compLinha = '1' then estado <= idle;
+								if compLinha = '1' then estado <= s7;
 									else
 										if compColuna = '0' then estado <= s0;
 											else
 												estado <= s5;
 										end if;
 								end if;
-								
+				when s7 =>  
+								done<='1';
+								estado<=idle;								
 			end case;
 		end if;
 	end if;
@@ -148,7 +153,7 @@ end process;
 outMuxAcc<= "00000000" when selMuxAcc='0' else
 				outULA;
 outMux1<="0100" when selMux1='0' else
-			MemB;
+			memB;
 outMux2<=memA when selMux2="00" else
 			Linha when selMux2="01" else
 			regI when selMux2="10" else
@@ -222,8 +227,6 @@ begin
 	elsif(rising_edge(clk))then
 		if(loadAddrA='1')then
 			AddrA<=outULA(3 downto 0);
-		elsif(incA='1')then
-			AddrA<=AddrA+"0001";
 		end if;
 	end if;
 end process;
@@ -235,8 +238,6 @@ begin
 	elsif(rising_edge(clk))then
 		if(loadAddrB='1')then
 			AddrB<=outULA(3 downto 0);
-		elsif(incB='1')then
-			AddrB<=AddrB+"0001";
 		end if;
 	end if;
 end process;
@@ -247,7 +248,9 @@ begin
 		AddrR<="0000";
 	elsif(rising_edge(clk))then
 		if(loadAddrR='1')then
-			AddrR<=outULA(3 downto 0);
+			AddrR<="0000";
+		elsif(incR='1')then
+		   AddrR<=AddrR+"0001";
 		end if;
 	end if;
 end process;
