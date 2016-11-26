@@ -66,6 +66,9 @@ begin
 	if reset = '1' then
 		estado <= idle;
 		else if rising_edge(clk) then
+		loadLinha<='0'; loadColuna <= '0'; loadI <= '0'; loadAcc <= '0'; selMuxAcc <= '0'; selMux1 <= '0'; selMux2 <= "00";
+		selMux3 <= "00"; loadAddrB <= '0'; loadAddrA <= '0'; incI <= '0'; loadI <= '0'; writeMem <= "0"; incColuna <= '0';
+		incR<='0'; loadColuna <= '0'; incLinha <= '0'; done<='0';
 			case estado is
 				when idle =>
 								loadLinha <= '1';
